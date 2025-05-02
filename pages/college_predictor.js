@@ -6,6 +6,7 @@ import Head from "next/head";
 import Fuse from "fuse.js";
 import examConfigs from "../examConfig";
 import Dropdown from "../components/dropdown";
+import Pagination from "../components/Pagination";
 
 const fuseOptions = {
   isCaseSensitive: false,
@@ -31,6 +32,8 @@ const CollegePredictor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [queryObject, setQueryObject] = useState({});
+  const [pageNumber, setPageNumber] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     setQueryObject(router.query);
@@ -58,6 +61,7 @@ const CollegePredictor = () => {
     } else {
       setFilteredData(result.map((r) => r.item)); // Update filtered data
       setError(null); // Clear any error message
+      setPageNumber(0);
     }
   };
 
@@ -79,6 +83,7 @@ const CollegePredictor = () => {
         const data = await response.json();
         setFilteredData(data);
         setFullData(data);
+        setPageNumber(0);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -169,6 +174,19 @@ const CollegePredictor = () => {
     );
   };
 
+  //Page start index and end index - for pagination
+  const start = pageNumber * pageSize;
+  const end = Math.min((pageNumber + 1) * pageSize, filteredData.length);
+
+  const handlePageNumber = (n) => {
+    setPageNumber(n);
+  };
+
+  const handlePageSize = (e) => {
+    setPageSize(e.value);
+    setPageNumber(0);
+  };
+
   return (
     <>
       <Head>
@@ -210,8 +228,15 @@ const CollegePredictor = () => {
                     Predicted colleges and courses for you:
                   </h3>
                   <PredictedCollegeTables
-                    data={filteredData}
+                    data={filteredData.slice(start, end)}
                     exam={router.query.exam}
+                  />
+                  <Pagination
+                    totalRows={filteredData.length}
+                    pageSize={pageSize}
+                    pageNumber={pageNumber}
+                    handlePageNumber={handlePageNumber}
+                    handlePageSize={handlePageSize}
                   />
                 </div>
               )}
