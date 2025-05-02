@@ -6,6 +6,7 @@ import Head from "next/head";
 import Fuse from "fuse.js";
 import { scholarshipConfig } from "../scholarshipConfig";
 import Dropdown from "../components/dropdown";
+import Pagination from "../components/Pagination";
 
 const fuseOptions = {
   isCaseSensitive: false,
@@ -33,6 +34,8 @@ const ScholarshipFinder = () => {
   const [queryObject, setQueryObject] = useState({});
   const [expandedRows, setExpandedRows] = useState([]);
   const [hasFetchedData, setHasFetchedData] = useState(false);
+  const [pageNumber, setPageNumber] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const fuse = new Fuse(filteredData, fuseOptions);
 
@@ -56,6 +59,7 @@ const ScholarshipFinder = () => {
         setFilteredData(data);
         setFullData(data);
         setHasFetchedData(true);
+        setPageNumber(0);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -86,6 +90,7 @@ const ScholarshipFinder = () => {
     const searchValue = e.target.value;
     const result = fuse.search(searchValue);
     setFilteredData(result.map((r) => r.item));
+    setPageNumber(0);
   };
 
   const handleQueryObjectChange = (key) => (selectedOption) => {
@@ -135,6 +140,19 @@ const ScholarshipFinder = () => {
     );
   };
 
+  //Page start index and end index - for pagination
+  const start = pageNumber * pageSize;
+  const end = Math.min((pageNumber + 1) * pageSize, filteredData.length);
+
+  const handlePageNumber = (n) => {
+    setPageNumber(n);
+  };
+
+  const handlePageSize = (e) => {
+    setPageSize(e.value);
+    setPageNumber(0);
+  };
+
   return (
     <>
       <Head>
@@ -175,9 +193,16 @@ const ScholarshipFinder = () => {
               </h3>
               <div className="w-full overflow-x-auto">
                 <ScholarshipTable
-                  filteredData={filteredData}
+                  filteredData={filteredData.slice(start, end)}
                   toggleRowExpansion={toggleRowExpansion}
                   expandedRows={expandedRows}
+                />
+                <Pagination
+                  totalRows={filteredData.length}
+                  pageSize={pageSize}
+                  pageNumber={pageNumber}
+                  handlePageNumber={handlePageNumber}
+                  handlePageSize={handlePageSize}
                 />
               </div>
             </>
